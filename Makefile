@@ -41,6 +41,11 @@ qemu_srcdir := $(srcdir)/riscv-gnu-toolchain/qemu
 qemu_wrkdir := $(wrkdir)/qemu
 qemu := $(qemu_wrkdir)/prefix/bin/qemu-system-riscv64
 
+llvm_srcdir := $(srcdir)/llvm
+llvm_wrkdir := $(wrkdir)/llvm
+llvm_dest := $(CURDIR)/toolchain
+CMAKE := cmake
+
 target_linux  := riscv64-unknown-linux-gnu
 target_newlib := riscv64-unknown-elf
 
@@ -72,6 +77,23 @@ $(toolchain_dest)/bin/$(target_newlib)-gcc: $(toolchain_srcdir)
 		--with-arch=$(ISA) \
 		--with-abi=$(ABI) 
 	$(MAKE) -C $(toolchain_wrkdir) 
+
+
+$(llvm_dest)/bin/clang: $(llvm_srcdir)
+	ln -s ../../clang $(llvm_srcdir)/llvm/tools || true
+	mkdir -p $(llvm_wrkdir)
+	cd $(llvm_wrkdir); $(CMAKE) -G Ninja -DCMAKE_BUILD_TYPE="Release" \
+		-DBUILD_SHARED_LIBS=True -DLLVM_USE_SPLIT_DWARF=True \
+		-DLLVM_OPTIMIZED_TABLEGEN=True -DLLVM_BUILD_TESTS=True \
+		-DCMAKE_INSTALL_PREFIX=$(llvm_dest) \
+		-DLLVM_DEFAULT_TARGET_TRIPLE=$(target_linux) \
+		-DLLVM_TARGETS_TO_BUILD="RISCV" \
+		-DDEFAULT_SYSROOT=$(llvm_dest)/$(target_linux) \
+		$(llvm_srcdir)/llvm
+	$(CMAKE) --build $(llvm_wrkdir) --target install
+
+llvm: $(llvm_dest)/bin/clang
+
 
 $(buildroot_initramfs_wrkdir)/.config: $(buildroot_srcdir)
 	rm -rf $(dir $@)
@@ -115,11 +137,11 @@ $(vmlinux): $(linux_srcdir) $(linux_wrkdir)/.config $(buildroot_initramfs_sysroo
 		CONFIG_INITRAMFS_ROOT_GID=$(shell id -g) \
 		CROSS_COMPILE=riscv64-unknown-linux-gnu- \
 		ARCH=riscv \
+		CC=clang \
 		vmlinux
 
 $(vmlinux_stripped): $(vmlinux)
 	$(target_linux)-strip -o $@ $<
-	
 
 .PHONY: linux-menuconfig
 linux-menuconfig: $(linux_wrkdir)/.config
