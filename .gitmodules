@@ -10,3 +10,6 @@
 [submodule "linux"]
 	path = linux
 	url = git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git
+[submodule "llvm"]
+	path = llvm
+	url = https://github.com/llvm/llvm-project.git
