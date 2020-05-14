@@ -26,6 +26,11 @@ Build dependencies on Ubuntu 16.04/18.04:
 $ sudo apt-get install device-tree-compiler autoconf automake autotools-dev    \
 curl libmpc-dev libmpfr-dev libgmp-dev gawk build-essential bison flex texinfo \
 gperf libtool patchutils bc zlib1g-dev libexpat-dev
+
+# for LLVM
+sudo apt-get install binutils build-essential gzip zip unzip git make cmake grep \
+ninja-build sed python libexpat1-dev libglib2.0-dev libfdt-dev libpixman-1-dev 
+  
 ```
 ```bash
 git clone https://github.com/Phantom1003/riscv-rss-sdk.git
